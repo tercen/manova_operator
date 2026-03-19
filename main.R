@@ -1,5 +1,6 @@
 library(tercen)
 library(dplyr)
+library(tidyr)
 
 ctx <- tercenCtx()
 
@@ -10,20 +11,31 @@ if (length(ctx$colors) < 1) stop("A color factor is required for grouping.")
 test_stat <- ctx$op.value("test_statistic", type = as.character, default = "Wilks")
 method    <- ctx$op.value("method", type = as.character, default = "one.way")
 
-# Get data as matrix (variables x observations)
-mat <- ctx$as.matrix()
+# Get data with color factors using ctx$select() (not ctx$as.matrix() + ctx$cselect())
+col_names <- unlist(ctx$colors)
+lab_names <- unlist(ctx$labels)
+select_cols <- c(".ci", ".ri", ".y", col_names, lab_names)
+df <- ctx$select(select_cols) %>% as_tibble()
 
-# Transpose: rows = observations, columns = variables (what manova() expects)
-Y <- t(mat)
+# Pivot to matrix: each .ci is an observation, each .ri is a variable
+Y <- df %>%
+  select(.ci, .ri, .y) %>%
+  pivot_wider(names_from = .ri, values_from = .y) %>%
+  select(-.ci) %>%
+  as.matrix()
 
-# Get group factor(s) from column space
-color_df <- ctx$cselect(ctx$colors)
-group1 <- as.factor(color_df[[1]])
+# Get group factor(s) — one value per observation (.ci)
+group_df <- df %>%
+  select(.ci, all_of(col_names)) %>%
+  distinct()
+group1 <- as.factor(group_df[[col_names[1]]])
 
 # Build model formula and fit
-if (method == "two.way" && length(ctx$labels) > 0) {
-  label_df <- ctx$cselect(ctx$labels)
-  group2 <- as.factor(label_df[[1]])
+if (method == "two.way" && length(lab_names) > 0) {
+  label_df <- df %>%
+    select(.ci, all_of(lab_names)) %>%
+    distinct()
+  group2 <- as.factor(label_df[[lab_names[1]]])
   fit <- manova(Y ~ group1 * group2)
 } else {
   fit <- manova(Y ~ group1)
