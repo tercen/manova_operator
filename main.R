@@ -18,9 +18,10 @@ select_cols <- c(".ci", ".ri", ".y", col_names, lab_names)
 df <- ctx$select(select_cols) %>% as_tibble()
 
 # Pivot to matrix: each .ci is an observation, each .ri is a variable
+# values_fn = mean handles duplicate .ci/.ri combinations
 Y <- df %>%
   select(.ci, .ri, .y) %>%
-  pivot_wider(names_from = .ri, values_from = .y) %>%
+  pivot_wider(names_from = .ri, values_from = .y, values_fn = mean) %>%
   select(-.ci) %>%
   as.matrix()
 
