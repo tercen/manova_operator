@@ -8,7 +8,7 @@
   ],
   "authors": ["tercen"],
   "urls": ["https://github.com/tercen/manova_operator"],
-  "container": "localhost:5050/tercen/manova_operator:dev",
+  "container": "ghcr.io/tercen/manova_operator:dev",
   "properties": [
     {
       "kind": "EnumeratedProperty",
