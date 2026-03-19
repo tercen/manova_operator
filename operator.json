@@ -1,0 +1,166 @@
+{
+  "name": "MANOVA",
+  "description": "Multivariate Analysis of Variance (MANOVA). Tests whether group means differ across multiple dependent variables simultaneously. Reports Wilk's Lambda, Pillai's trace, and per-effect F-statistics.",
+  "tags": [
+    "statistical testing",
+    "multivariate statistics",
+    "hypothesis testing"
+  ],
+  "authors": ["tercen"],
+  "urls": ["https://github.com/tercen/manova_operator"],
+  "container": "ghcr.io/tercen/manova_operator:dev",
+  "properties": [
+    {
+      "kind": "EnumeratedProperty",
+      "name": "test_statistic",
+      "defaultValue": "Wilks",
+      "values": ["Wilks", "Pillai", "Hotelling-Lawley", "Roy"],
+      "description": "MANOVA test statistic to report."
+    },
+    {
+      "kind": "EnumeratedProperty",
+      "name": "method",
+      "defaultValue": "one.way",
+      "values": ["one.way", "two.way"],
+      "description": "Whether to consider interactions between group factors (two.way) or not (one.way)."
+    }
+  ],
+  "operatorSpec": {
+    "kind": "OperatorSpec",
+    "ontologyUri": "https://tercen.com/_ontology/tercen",
+    "ontologyVersion": "1.0.0",
+    "inputSpecs": [
+      {
+        "kind": "CrosstabSpec",
+        "metaFactors": [
+          {
+            "kind": "MetaFactor",
+            "name": "Variable",
+            "type": "",
+            "description": "Dependent variable identifiers (the multiple response variables).",
+            "ontologyMapping": "variable",
+            "crosstabMapping": "row",
+            "cardinality": "1..n",
+            "factors": []
+          },
+          {
+            "kind": "MetaFactor",
+            "name": "Observation",
+            "type": "",
+            "description": "Observation identifiers.",
+            "ontologyMapping": "observation",
+            "crosstabMapping": "column",
+            "cardinality": "1..n",
+            "factors": []
+          }
+        ],
+        "axis": [
+          {
+            "kind": "AxisSpec",
+            "metaFactors": [
+              {
+                "kind": "MetaFactor",
+                "name": "Measurement",
+                "type": "double",
+                "description": "Measurement values.",
+                "ontologyMapping": "measurement",
+                "crosstabMapping": "y",
+                "cardinality": "1",
+                "factors": []
+              },
+              {
+                "kind": "MetaFactor",
+                "name": "Group",
+                "type": "",
+                "description": "Primary grouping factor.",
+                "ontologyMapping": "group",
+                "crosstabMapping": "color",
+                "cardinality": "1..n",
+                "factors": []
+              },
+              {
+                "kind": "MetaFactor",
+                "name": "Group2",
+                "type": "",
+                "description": "Optional second grouping factor for two-way MANOVA.",
+                "ontologyMapping": "pairing",
+                "crosstabMapping": "label",
+                "cardinality": "0..1",
+                "factors": []
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "outputSpecsV2": [
+      {
+        "kind": "OperatorJoinSpec",
+        "joinOperators": [
+          {
+            "kind": "JoinOperator",
+            "joinType": "left",
+            "leftPair": {
+              "kind": "ColumnPair",
+              "lColumns": [],
+              "rColumns": []
+            },
+            "rightRelation": {
+              "kind": "TableRelation",
+              "attributes": [
+                {
+                  "kind": "Attribute",
+                  "name": "Effect",
+                  "type": "string",
+                  "description": "Effect name (group1, group1:group2)"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "test_statistic",
+                  "type": "string",
+                  "description": "Name of test statistic (Wilks, Pillai, etc.)"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "statistic_value",
+                  "type": "double",
+                  "description": "Value of the test statistic (e.g., Wilk's Lambda)"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "approx_F",
+                  "type": "double",
+                  "description": "Approximate F-statistic"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "num_df",
+                  "type": "double",
+                  "description": "Numerator degrees of freedom"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "den_df",
+                  "type": "double",
+                  "description": "Denominator degrees of freedom"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "p_value",
+                  "type": "double",
+                  "description": "P-value"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "significance",
+                  "type": "string",
+                  "description": "Significance code (***,**,*,.,ns)"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
