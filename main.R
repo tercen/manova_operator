@@ -76,6 +76,10 @@ result <- data.frame(
 result$significance <- sig_code(result$p_value)
 
 # Return result as flat summary (empty join keys)
+# .ci and .ri are required even for global summaries
+result$.ci <- 0L
+result$.ri <- 0L
+
 result %>%
   ctx$addNamespace() %>%
   ctx$save()
