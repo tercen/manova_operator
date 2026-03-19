@@ -17,18 +17,22 @@ lab_names <- unlist(ctx$labels)
 select_cols <- c(".ci", ".ri", ".y", col_names, lab_names)
 df <- ctx$select(select_cols) %>% as_tibble()
 
-# Pivot to matrix: each .ci is an observation, each .ri is a variable
-# values_fn = mean handles duplicate .ci/.ri combinations
-Y <- df %>%
-  select(.ci, .ri, .y) %>%
-  pivot_wider(names_from = .ri, values_from = .y, values_fn = mean) %>%
-  select(-.ci) %>%
-  as.matrix()
-
-# Get group factor(s) — one value per observation (.ci)
+# Each unique .ci is an observation — get the group factor per .ci
+# If a .ci maps to multiple group values (shouldn't happen with correct projection),
+# take the first one
 group_df <- df %>%
   select(.ci, all_of(col_names)) %>%
-  distinct()
+  group_by(.ci) %>%
+  summarise(across(everything(), first), .groups = "drop") %>%
+  arrange(.ci)
+
+# Ensure Y rows match group_df rows (both ordered by .ci)
+Y_df <- df %>%
+  select(.ci, .ri, .y) %>%
+  pivot_wider(names_from = .ri, values_from = .y, values_fn = mean) %>%
+  arrange(.ci)
+Y <- Y_df %>% select(-.ci) %>% as.matrix()
+
 group1 <- as.factor(group_df[[col_names[1]]])
 
 # Build model formula and fit
